@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的輕旅行回憶錄</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 FontAwesome 圖示 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入 Google 字體 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6', // Teal 主色調
+                            600: '#0d9488',
+                            900: '#134e4a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f8fafc;
+            /* 加上淡淡的網點背景增加質感 */
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased font-sans flex flex-col min-h-screen">
+
+    <!-- 頁首 Banner -->
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="bg-brand-500 text-white w-10 h-10 rounded-xl flex items-center justify-center transform -rotate-6 shadow-sm">
+                    <i class="fa-solid fa-plane-departure"></i>
+                </div>
+                <h1 class="text-xl font-bold text-slate-800 tracking-wide">Family Travel <span class="text-brand-500">Log</span></h1>
+            </div>
+            <nav class="hidden md:flex gap-6 text-sm font-medium text-slate-600">
+                <a href="#" class="hover:text-brand-500 transition-colors">所有旅程</a>
+                <a href="#" class="hover:text-brand-500 transition-colors">即將出發</a>
+                <a href="#" class="hover:text-brand-500 transition-colors">心願清單</a>
+            </nav>
+            <button class="md:hidden text-slate-500 hover:text-brand-500">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- 主要內容區 -->
+    <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+        
+        <!-- 歡迎語 -->
+        <div class="mb-10 text-center md:text-left">
+            <h2 class="text-3xl md:text-4xl font-black mb-3 text-slate-800">我們的輕旅行回憶 🏕️</h2>
+            <p class="text-slate-500 md:text-lg">記錄每一次週末出走、連假避暑與親子同樂的美好時光。點擊卡片回顧行程細節。</p>
+        </div>
+
+        <!-- 行程卡片網格 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+
+            <!-- 卡片 1：台南兩天一夜 (連結到剛剛做的頁面) -->
+            <a href="tainan_family_trip.html" class="block group">
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1 h-full flex flex-col border border-slate-100">
+                    <!-- 縮圖 -->
+                    <div class="relative h-48 overflow-hidden bg-slate-200">
+                        <!-- 使用頑皮世界水豚圖作為封面 -->
+                        <img src="https://www.abic.com.tw/upload/wanpi/70.jpg" alt="台南親子遊封面" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                        <div class="absolute top-3 left-3 flex gap-2">
+                            <span class="bg-white/90 backdrop-blur-sm text-brand-600 px-2.5 py-1 rounded-lg text-xs font-bold shadow-sm">2 天 1 夜</span>
+                            <span class="bg-brand-500/90 backdrop-blur-sm text-white px-2.5 py-1 rounded-lg text-xs font-bold shadow-sm">2026/07/30、31</span>
+                        </div>
+                    </div>
+                    <!-- 內容 -->
+                    <div class="p-5 flex flex-col flex-grow">
+                        <div class="text-xs font-bold text-slate-400 mb-2">2026 年 7 月</div>
+                        <h3 class="text-xl font-bold mb-2 group-hover:text-brand-500 transition-colors">台南兩天一夜・避暑親子輕鬆遊</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed mb-4 line-clamp-2 flex-grow">
+                            專為有小孩家庭設計。把移動當休息，結合七股鹽山、頑皮世界與泥漿溫泉的完美慢活之旅。
+                        </p>
+                        <!-- 標籤 -->
+                        <div class="flex flex-wrap gap-2 mt-auto">
+                            <span class="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded-md"><i class="fa-solid fa-baby-carriage mr-1"></i>推車友善</span>
+                            <span class="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded-md"><i class="fa-solid fa-snowflake mr-1"></i>避暑</span>
+                            <span class="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded-md"><i class="fa-solid fa-hot-tub-person mr-1"></i>溫泉</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+            <!-- 卡片 2：未來的預留行程範例 (無連結) -->
+            <div class="block group cursor-default">
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm h-full flex flex-col border border-slate-100 opacity-75">
+                    <!-- 縮圖 -->
+                    <div class="relative h-48 overflow-hidden bg-slate-100 flex items-center justify-center">
+                        <i class="fa-solid fa-image text-4xl text-slate-300"></i>
+                        <div class="absolute inset-0 bg-slate-800/10 backdrop-blur-[2px] flex items-center justify-center">
+                            <span class="bg-white/80 text-slate-600 px-4 py-2 rounded-full text-sm font-bold shadow-sm">準備規劃中...</span>
+                        </div>
+                    </div>
+                    <!-- 內容 -->
+                    <div class="p-5 flex flex-col flex-grow">
+                        <div class="text-xs font-bold text-slate-400 mb-2">預計 2026 年底</div>
+                        <h3 class="text-xl font-bold mb-2 text-slate-400">放鬆行 (敬請期待)</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-4 flex-grow">
+                            預計安排....。
+                        </p>
+                        <!-- 標籤 -->
+                        <div class="flex flex-wrap gap-2 mt-auto">
+                            <span class="bg-slate-50 text-slate-400 text-xs px-2 py-1 rounded-md border border-slate-100"><i class="fa-solid fa-leaf mr-1"></i>自然</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 卡片 3：點擊新增按鈕 -->
+            <div class="block">
+                <div class="bg-transparent rounded-2xl overflow-hidden h-full flex flex-col border-2 border-dashed border-slate-300 hover:border-brand-400 hover:bg-brand-50 transition-colors cursor-pointer justify-center items-center py-12 group">
+                    <div class="w-16 h-16 bg-slate-100 group-hover:bg-brand-100 text-slate-400 group-hover:text-brand-500 rounded-full flex items-center justify-center text-2xl transition-colors mb-4">
+                        <i class="fa-solid fa-plus"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-500 group-hover:text-brand-600">新增下一趟旅行</h3>
+                    <p class="text-xs text-slate-400 mt-2">點擊創建新的行程表</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- 頁尾 -->
+    <footer class="bg-white border-t border-slate-200 py-8 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <div class="flex justify-center gap-4 mb-4 text-slate-400">
+                <a href="#" class="hover:text-brand-500"><i class="fa-brands fa-instagram text-xl"></i></a>
+                <a href="#" class="hover:text-brand-500"><i class="fa-brands fa-facebook text-xl"></i></a>
+            </div>
+            <p class="text-slate-500 text-sm">© 2026 Family Travel Log. All rights reserved.</p>
+            <p class="text-slate-400 text-xs mt-1">Life is short and the world is wide.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
