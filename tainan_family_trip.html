@@ -29,6 +29,24 @@
         }
         /* 隱藏最後一個 timeline-line */
         .timeline-item:last-child .timeline-line { display: none; }
+        
+        .choice-divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+        .choice-divider::before, .choice-divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 2px dashed #d1d5db;
+        }
+        .choice-divider span {
+            padding: 0 10px;
+            color: #6b7280;
+            font-weight: bold;
+            font-size: 0.875rem;
+        }
     </style>
 </head>
 <body class="text-gray-800 pb-20">
@@ -37,7 +55,6 @@
     <div class="relative h-64 w-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1578465191845-f09db0cdcf3c?auto=format&fit=crop&q=80&w=1200');">
         <div class="absolute inset-0 bg-black bg-opacity-40"></div>
         <div class="absolute top-4 left-4">
-            <!-- 返回入口網站的按鈕示意 -->
             <a href="index.html" class="bg-white bg-opacity-80 text-gray-800 px-4 py-2 rounded-full font-bold shadow-md hover:bg-white transition flex items-center gap-2 text-sm backdrop-blur-sm">
                 <i class="fas fa-arrow-left"></i> 回我的旅遊首頁
             </a>
@@ -46,7 +63,7 @@
             <span class="bg-blue-600 text-xs px-2 py-1 rounded-md font-bold mb-2 inline-block">親子友善</span>
             <span class="bg-orange-500 text-xs px-2 py-1 rounded-md font-bold mb-2 inline-block ml-1">推車OK</span>
             <h1 class="text-3xl font-black drop-shadow-lg">台南兩天一夜</h1>
-            <p class="text-sm font-medium mt-1 drop-shadow-md opacity-90"><i class="fas fa-sun text-yellow-300"></i> 避暑・生態・泥漿溫泉放鬆遊</p>
+            <p class="text-sm font-medium mt-1 drop-shadow-md opacity-90"><i class="fas fa-sun text-yellow-300"></i> 生態體驗・泥漿溫泉・美食之旅</p>
         </div>
     </div>
 
@@ -56,30 +73,28 @@
         <!-- ================= DAY 1 ================= -->
         <div class="mb-10 bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
             <div class="bg-blue-50 px-5 py-4 border-b border-blue-100 flex justify-between items-center">
-                <h2 class="text-xl font-bold text-blue-800"><i class="fas fa-flag text-blue-500 mr-2"></i>Day 1: 濱海動物與蓮花溫泉</h2>
-                <span class="text-xs font-bold bg-blue-200 text-blue-700 px-2 py-1 rounded-full">高溫避暑對策</span>
+                <h2 class="text-xl font-bold text-blue-800"><i class="fas fa-flag text-blue-500 mr-2"></i>Day 1: 動物生態與蓮花溫泉</h2>
             </div>
             
             <!-- Day 1 路線地圖區塊 -->
             <div class="p-4 bg-gray-50 border-b border-gray-100">
                 <div class="flex justify-between items-center mb-2">
                     <h3 class="font-bold text-gray-700 text-sm"><i class="fas fa-map-marked-alt text-gray-500 mr-1"></i> 第一天路線總覽</h3>
-                    <a href="https://maps.app.goo.gl/CCWkJaTWJFGvYkAg7" target="_blank" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-sm transition flex items-center gap-1">
+                    <a href="https://www.google.com/maps/dir/高雄/頑皮世界野生動物園/學甲區/白河蓮花公園/關子嶺富野溫泉會館/關子嶺紅雞城" target="_blank" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-sm transition flex items-center gap-1">
                         <i class="fas fa-location-arrow"></i> 開啟 App 導航
                     </a>
                 </div>
                 <div class="rounded-xl overflow-hidden border border-gray-200 shadow-inner w-full h-64 bg-gray-200">
-                    <!-- 使用 Google Maps 嵌入語法串接路線 -->
                     <iframe 
                         width="100%" 
                         height="100%" 
                         frameborder="0" 
                         style="border:0" 
-                        src="https://maps.google.com/maps?saddr=高雄&daddr=七股鹽山+to:頑皮世界野生動物園+to:白河蓮花公園+to:關子嶺富野溫泉會館+to:關子嶺紅雞城&output=embed" 
+                        src="https://maps.google.com/maps?saddr=高雄&daddr=頑皮世界野生動物園+to:學甲+to:白河蓮花公園+to:關子嶺富野溫泉會館+to:關子嶺紅雞城&output=embed" 
                         allowfullscreen>
                     </iframe>
                 </div>
-                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> 高雄出發 ➔ 七股 ➔ 學甲 ➔ 白河 ➔ 關子嶺</p>
+                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> 高雄 ➔ 頑皮世界 ➔ 學甲 ➔ 白河 ➔ 關子嶺</p>
             </div>
 
             <div class="px-5 py-6">
@@ -93,30 +108,10 @@
                         <h3 class="font-bold text-lg">出發・沿西濱向北</h3>
                         <span class="text-xs text-gray-500 font-bold">08:30</span>
                     </div>
-                    <p class="text-sm text-gray-600 mb-2">從高雄溫暖的早晨出發。車上的時間剛好能讓家人或孩子舒適小憩，儲備體力。</p>
+                    <p class="text-sm text-gray-600 mb-2">從高雄出發。趁早晨精神好直奔主題樂園，車上時間讓孩子補個眠。</p>
                 </div>
 
                 <!-- 行程 2 -->
-                <div class="relative pl-12 mb-8 timeline-item">
-                    <div class="timeline-line"></div>
-                    <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-yellow-100 border-4 border-white shadow flex items-center justify-center text-yellow-600 text-xs">
-                        <i class="fas fa-mountain"></i>
-                    </div>
-                    <div class="flex items-center justify-between mb-1">
-                        <h3 class="font-bold text-lg">七股鹽山</h3>
-                        <span class="text-xs text-gray-500 font-bold">09:30</span>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-3">趁陽光不毒辣時爬雪白鹽山拍照。園區步道平緩，推車好走。</p>
-                    <div class="rounded-xl overflow-hidden h-40 bg-gray-100 mb-2">
-                        <img src="https://www.abic.com.tw/upload/cigusaltmontain/01.jpg" alt="七股鹽山" class="w-full h-full object-cover img-hover-zoom">
-                    </div>
-                    <div class="flex gap-2">
-                        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">吃鹽鹹冰棒降溫</span>
-                        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">推車友善</span>
-                    </div>
-                </div>
-
-                <!-- 行程 3 -->
                 <div class="relative pl-12 mb-8 timeline-item">
                     <div class="timeline-line"></div>
                     <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-green-100 border-4 border-white shadow flex items-center justify-center text-green-600 text-xs">
@@ -124,31 +119,28 @@
                     </div>
                     <div class="flex items-center justify-between mb-1">
                         <h3 class="font-bold text-lg">頑皮世界野生動物園</h3>
-                        <span class="text-xs text-gray-500 font-bold">11:00</span>
+                        <span class="text-xs text-gray-500 font-bold">09:30</span>
                     </div>
-                    <p class="text-sm text-gray-600 mb-3">南台灣最大半開放動物園。近距離餵食水豚與草羊駝，中午炎熱時可躲進「兩棲爬蟲館」吹冷氣避暑。</p>
+                    <p class="text-sm text-gray-600 mb-3">趁早上氣溫涼爽，近距離餵食水豚與草羊駝。快中午時可躲進「兩棲爬蟲館」吹冷氣。</p>
                     <div class="rounded-xl overflow-hidden h-40 bg-gray-100 mb-2">
                         <img src="https://www.abic.com.tw/upload/wanpi/70.jpg" alt="頑皮世界水豚" class="w-full h-full object-cover img-hover-zoom">
                     </div>
-                    <div class="flex gap-2">
-                        <span class="text-xs bg-cyan-50 text-cyan-700 px-2 py-1 rounded"><i class="fas fa-snowflake text-cyan-400"></i> 室內館冷氣</span>
-                    </div>
                 </div>
 
-                <!-- 行程 4 -->
+                <!-- 行程 3 -->
                 <div class="relative pl-12 mb-8 timeline-item">
                     <div class="timeline-line"></div>
                     <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-orange-100 border-4 border-white shadow flex items-center justify-center text-orange-600 text-xs">
-                        <i class="fas fa-utensils"></i>
+                        <i class="fas fa-store"></i>
                     </div>
                     <div class="flex items-center justify-between mb-1">
-                        <h3 class="font-bold text-lg">沿途隨意吃・午餐</h3>
-                        <span class="text-xs text-gray-500 font-bold">13:30</span>
+                        <h3 class="font-bold text-lg">學甲・午餐時光</h3>
+                        <span class="text-xs text-gray-500 font-bold">12:30</span>
                     </div>
-                    <p class="text-sm text-gray-600">從學甲往白河方向移動。途中可順路找間小吃店簡單用餐，填飽肚子後繼續下午行程。</p>
+                    <p class="text-sm text-gray-600">離開動物園後，就近前往學甲市區。這裡的「虱目魚粥」非常有名，可找間評價不錯的小吃店簡單填飽肚子。</p>
                 </div>
 
-                <!-- 行程 5 -->
+                <!-- 行程 4 -->
                 <div class="relative pl-12 mb-8 timeline-item">
                     <div class="timeline-line"></div>
                     <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-pink-100 border-4 border-white shadow flex items-center justify-center text-pink-600 text-xs">
@@ -156,15 +148,15 @@
                     </div>
                     <div class="flex items-center justify-between mb-1">
                         <h3 class="font-bold text-lg">白河大王蓮</h3>
-                        <span class="text-xs text-gray-500 font-bold">14:45</span>
+                        <span class="text-xs text-gray-500 font-bold">14:00</span>
                     </div>
-                    <p class="text-sm text-gray-600 mb-3">來到白河區體驗乘坐「大王蓮」。小朋友坐在巨大的蓮葉上拍照非常吸睛，是十分特別的生態體驗！</p>
+                    <p class="text-sm text-gray-600 mb-3">來到白河區，體驗乘坐「大王蓮」。小朋友坐在巨大的蓮葉上拍照非常吸睛，是難得的生態體驗！</p>
                     <div class="rounded-xl overflow-hidden h-40 bg-gray-100 mb-2">
                         <img src="https://cdn2.ettoday.net/images/2673/d2673609.jpg" alt="大王蓮示意圖" class="w-full h-full object-cover img-hover-zoom">
                     </div>
                 </div>
 
-                <!-- 行程 6 -->
+                <!-- 行程 5 -->
                 <div class="relative pl-12 mb-8 timeline-item">
                     <div class="timeline-line"></div>
                     <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-purple-100 border-4 border-white shadow flex items-center justify-center text-purple-600 text-xs">
@@ -172,12 +164,12 @@
                     </div>
                     <div class="flex items-center justify-between mb-1">
                         <h3 class="font-bold text-lg">入住：富野溫泉會館</h3>
-                        <span class="text-xs text-gray-500 font-bold">16:00</span>
+                        <span class="text-xs text-gray-500 font-bold">15:30</span>
                     </div>
-                    <p class="text-sm text-gray-600 mb-2">開車上山進飯店 Check-in。在舒適冷氣房內安頓行李、沖洗汗水，避開南部午後最悶熱的時段，或直接享受泥漿溫泉。</p>
+                    <p class="text-sm text-gray-600 mb-2">開車上山進飯店。在舒適冷氣房內安頓行李、沖洗汗水，避開南部午後最悶熱的時段，或直接享受泥漿溫泉。</p>
                 </div>
 
-                <!-- 行程 7 -->
+                <!-- 行程 6 -->
                 <div class="relative pl-12 timeline-item">
                     <div class="timeline-line"></div>
                     <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-red-100 border-4 border-white shadow flex items-center justify-center text-red-600 text-xs">
@@ -199,14 +191,14 @@
         <!-- ================= DAY 2 ================= -->
         <div class="mb-10 bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
             <div class="bg-emerald-50 px-5 py-4 border-b border-emerald-100 flex justify-between items-center">
-                <h2 class="text-xl font-bold text-emerald-800"><i class="fas fa-leaf text-emerald-500 mr-2"></i>Day 2: 山林奇景與化石探險</h2>
+                <h2 class="text-xl font-bold text-emerald-800"><i class="fas fa-leaf text-emerald-500 mr-2"></i>Day 2: 山林奇景與彈性探索</h2>
             </div>
 
             <!-- Day 2 路線地圖區塊 -->
             <div class="p-4 bg-gray-50 border-b border-gray-100">
                 <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-bold text-gray-700 text-sm"><i class="fas fa-map-marked-alt text-gray-500 mr-1"></i> 第二天路線總覽</h3>
-                    <a href="https://maps.app.goo.gl/r3m8tkWQ4w2jK3Hi8" target="_blank" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-sm transition flex items-center gap-1">
+                    <h3 class="font-bold text-gray-700 text-sm"><i class="fas fa-map-marked-alt text-gray-500 mr-1"></i> 第二天路線 (預設左鎮路線)</h3>
+                    <a href="https://www.google.com/maps/dir/關子嶺富野溫泉會館/水火同源/左鎮化石園區/魚翅火鍋" target="_blank" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-sm transition flex items-center gap-1">
                         <i class="fas fa-location-arrow"></i> 開啟 App 導航
                     </a>
                 </div>
@@ -216,11 +208,11 @@
                         height="100%" 
                         frameborder="0" 
                         style="border:0" 
-                        src="https://maps.google.com/maps?saddr=關子嶺富野溫泉會館&daddr=水火同源+to:臺南左鎮化石園區&output=embed" 
+                        src="https://maps.google.com/maps?saddr=關子嶺富野溫泉會館&daddr=水火同源+to:左鎮化石園區+to:魚翅火鍋&output=embed" 
                         allowfullscreen>
                     </iframe>
                 </div>
-                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> 飯店退房 ➔ 水火同源 ➔ 左鎮</p>
+                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> 退房 ➔ 水火同源 ➔ (左鎮或七股) ➔ 晚餐魚翅火鍋</p>
             </div>
 
             <div class="px-5 py-6">
@@ -234,11 +226,11 @@
                         <h3 class="font-bold text-lg">悠閒晨光與退房</h3>
                         <span class="text-xs text-gray-500 font-bold">08:00 - 10:00</span>
                     </div>
-                    <p class="text-sm text-gray-600 mb-2">享用飯店早餐，享受山林晨間較涼爽舒適的空氣，隨後整理行李辦理退房。</p>
+                    <p class="text-sm text-gray-600 mb-2">享用飯店早餐，享受山林晨間涼爽舒適的空氣，隨後整理行李辦理退房。</p>
                 </div>
 
                 <!-- 行程 2 -->
-                <div class="relative pl-12 mb-8 timeline-item">
+                <div class="relative pl-12 mb-4 timeline-item">
                     <div class="timeline-line"></div>
                     <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-red-100 border-4 border-white shadow flex items-center justify-center text-red-500 text-xs">
                         <i class="fas fa-fire-alt"></i>
@@ -247,30 +239,61 @@
                         <h3 class="font-bold text-lg">水火同源</h3>
                         <span class="text-xs text-gray-500 font-bold">10:30</span>
                     </div>
-                    <p class="text-sm text-gray-600 mb-3">順路造訪岩壁洞穴景點，觀賞天然氣與泉水共存燃燒的奇景。景觀木棧道平緩，推車好走。</p>
+                    <p class="text-sm text-gray-600 mb-3">順路造訪岩壁洞穴景點，觀賞天然氣與泉水共存燃燒的奇景。木棧道平緩，推車好走。</p>
                     <div class="rounded-xl overflow-hidden h-40 bg-gray-100 mb-2">
                         <img src="https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmPE2E5z9xixyICbZu1C01nHj4vOjCSFXsnViPDiyXNHeh1KJdk0eaVJ1kpWb5d-DPIZk0_xfRl3HnpWZKJBdHrBfdRV3lT-B4CvA_2ERhGMoOUrvJXZ8wD7ZC9xWiJbWVDeyqxBQ=s1360-w1360-h1020-rw" alt="水火同源" class="w-full h-full object-cover img-hover-zoom">
                     </div>
                 </div>
 
-                <!-- 行程 3 -->
+                <!-- 選擇分隔線 -->
                 <div class="relative pl-12 timeline-item">
+                    <div class="timeline-line"></div>
+                    <div class="choice-divider"><span>午後行程二選一</span></div>
+                </div>
+
+                <!-- 行程 3 選擇 A -->
+                <div class="relative pl-12 mb-8 timeline-item">
                     <div class="timeline-line"></div>
                     <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-stone-200 border-4 border-white shadow flex items-center justify-center text-stone-600 text-xs">
                         <i class="fas fa-bone"></i>
                     </div>
                     <div class="flex items-center justify-between mb-1">
-                        <h3 class="font-bold text-lg">左鎮化石園區</h3>
-                        <span class="text-xs text-gray-500 font-bold">13:00</span>
+                        <h3 class="font-bold text-lg">路線 A：左鎮化石園區</h3>
+                        <span class="text-xs text-gray-500 font-bold">12:30</span>
                     </div>
-                    <p class="text-sm text-gray-600 mb-3">南部午後最佳避暑去處！全館室內冷氣開放，無障礙設施極佳。豐富恐龍與古生物標本讓孩子玩整個下午。</p>
+                    <p class="text-sm text-gray-600 mb-3"><b class="text-blue-600">【怕熱首選】</b>全館室內冷氣開放，無障礙設施極佳。豐富恐龍與古生物標本讓孩子舒適探索。</p>
                     <div class="rounded-xl overflow-hidden h-40 bg-gray-100 mb-2">
                         <img src="https://lh3.googleusercontent.com/gps-cs-s/AHRPTWl0P4PYBgKCstpjP-z0TKxcxZAhUeyudYPrQIwq07PX4H4PBux_yskhSv-nlq1Xp6PG7rZlRrZTa7WWSAl4npfyTwctn3eDnZwWNi2SlZGAFaau8LJz5ztCXMuAeuz3tVOHgPn9=s1360-w1360-h1020-rw" alt="左鎮化石園區" class="w-full h-full object-cover img-hover-zoom">
                     </div>
-                    <div class="flex gap-2">
-                        <span class="text-xs bg-cyan-50 text-cyan-700 px-2 py-1 rounded"><i class="fas fa-snowflake text-cyan-400"></i> 全室內冷氣</span>
-                        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">無障礙電梯</span>
+                </div>
+
+                <!-- 行程 3 選擇 B -->
+                <div class="relative pl-12 mb-8 timeline-item">
+                    <div class="timeline-line"></div>
+                    <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-yellow-100 border-4 border-white shadow flex items-center justify-center text-yellow-600 text-xs">
+                        <i class="fas fa-mountain"></i>
                     </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="font-bold text-lg">路線 B：七股鹽山</h3>
+                        <span class="text-xs text-gray-500 font-bold">12:30</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3"><b class="text-orange-500">【戶外踏青】</b>如果天氣多雲微風，可選擇前往七股爬鹽山、吃鹹冰棒，體驗台灣獨特的鹽田風光。</p>
+                    <div class="rounded-xl overflow-hidden h-40 bg-gray-100 mb-2">
+                        <img src="https://www.abic.com.tw/upload/cigusaltmontain/01.jpg" alt="七股鹽山" class="w-full h-full object-cover img-hover-zoom">
+                    </div>
+                </div>
+
+                <!-- 行程 4 -->
+                <div class="relative pl-12 timeline-item">
+                    <div class="timeline-line"></div>
+                    <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-teal-100 border-4 border-white shadow flex items-center justify-center text-teal-600 text-xs">
+                        <i class="fas fa-soup"></i>
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="font-bold text-lg">晚餐：魚翅火鍋</h3>
+                        <span class="text-xs text-gray-500 font-bold">17:00</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">結束一天的行程，在回高雄的順路途中（如茄萣或市區），找一間熱呼呼、湯頭鮮美的魚翅火鍋犒賞全家人，為這趟旅程畫下完美句點！</p>
                 </div>
 
             </div>
@@ -278,7 +301,7 @@
 
         <!-- 結語 -->
         <div class="text-center py-6 mb-10">
-            <p class="text-gray-500 font-medium">帶著滿滿回憶，準備返程回溫暖的家！<br><span class="text-sm mt-1 inline-block">Safe Travels!🚗💨</span></p>
+            <p class="text-gray-500 font-medium">吃飽喝足，準備返程回溫暖的家！<br><span class="text-sm mt-1 inline-block">Safe Travels! 🚗💨</span></p>
         </div>
 
     </div>
