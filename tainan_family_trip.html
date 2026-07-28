@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台南兩天一夜・互動排程版</title>
+    <title>台南兩天一夜</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- 引入 SortableJS 用於拖曳排序 -->
@@ -35,11 +35,9 @@
     <div id="banner-bg" class="relative h-64 w-full bg-cover bg-center transition-all duration-500" style="background-image: url('https://images.unsplash.com/photo-1578465191845-f09db0cdcf3c?auto=format&fit=crop&q=80&w=1200');">
         <div class="absolute inset-0 bg-black bg-opacity-40"></div>
         
-        <!-- 隱藏的上傳輸入框 -->
-        <input type="file" id="banner-upload" accept="image/*" class="hidden" onchange="handleBannerUpload(event)">
-        <!-- 編輯封面按鈕 -->
-        <button onclick="document.getElementById('banner-upload').click()" class="absolute bottom-6 right-6 bg-white bg-opacity-20 hover:bg-opacity-90 text-white hover:text-gray-800 w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-all backdrop-blur-sm z-10" title="更換封面圖片">
-            <i class="fas fa-camera text-lg"></i>
+        <!-- 編輯封面按鈕 (改為輸入網址) -->
+        <button onclick="changeBannerUrl()" class="absolute bottom-6 right-6 bg-white bg-opacity-20 hover:bg-opacity-90 text-white hover:text-gray-800 w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-all backdrop-blur-sm z-10" title="更換封面圖片網址">
+            <i class="fas fa-link text-lg"></i>
         </button>
 
         <div class="absolute top-4 left-4">
@@ -212,6 +210,10 @@
             ]
         };
 
+        let itineraryData = {};
+        // 新增：儲存封面網址的全域變數
+        let bannerUrl = 'https://images.unsplash.com/photo-1578465191845-f09db0cdcf3c?auto=format&fit=crop&q=80&w=1200';
+
         // 顏色映射表
         const colorMap = {
             blue: { bg: 'bg-blue-100', text: 'text-blue-600' },
@@ -223,23 +225,24 @@
             stone: { bg: 'bg-stone-200', text: 'text-stone-600' }
         };
 
-        let itineraryData = {};
-
         // 初始化載入
         function init() {
             // 從 localStorage 讀取資料，若無則使用預設
             const savedData = localStorage.getItem('tainanTripData');
             if (savedData) {
-                try { itineraryData = JSON.parse(savedData); } catch(e) { itineraryData = JSON.parse(JSON.stringify(defaultData)); }
+                try { 
+                    const parsed = JSON.parse(savedData);
+                    itineraryData = parsed.itinerary || parsed; // 相容舊版資料結構
+                    bannerUrl = parsed.banner || bannerUrl;
+                } catch(e) { 
+                    itineraryData = JSON.parse(JSON.stringify(defaultData)); 
+                }
             } else {
                 itineraryData = JSON.parse(JSON.stringify(defaultData));
             }
 
-            // 讀取自訂封面圖片
-            const savedBanner = localStorage.getItem('tainanTripBanner');
-            if (savedBanner) {
-                document.getElementById('banner-bg').style.backgroundImage = `url('${savedBanner}')`;
-            }
+            // 更新封面圖
+            document.getElementById('banner-bg').style.backgroundImage = `url('${bannerUrl}')`;
 
             renderDay('day1');
             renderDay('day2');
@@ -309,14 +312,19 @@
 
         // 資料操作
         function saveData() {
-            localStorage.setItem('tainanTripData', JSON.stringify(itineraryData));
+            // 將行程與封面網址包裝在一起儲存
+            const dataToSave = {
+                itinerary: itineraryData,
+                banner: bannerUrl
+            };
+            localStorage.setItem('tainanTripData', JSON.stringify(dataToSave));
         }
 
         function resetData() {
             if(confirm("確定要放棄所有修改，還原成最初的行程嗎？")) {
                 localStorage.removeItem('tainanTripData');
-                localStorage.removeItem('tainanTripBanner');
-                document.getElementById('banner-bg').style.backgroundImage = `url('https://images.unsplash.com/photo-1578465191845-f09db0cdcf3c?auto=format&fit=crop&q=80&w=1200')`;
+                bannerUrl = 'https://images.unsplash.com/photo-1578465191845-f09db0cdcf3c?auto=format&fit=crop&q=80&w=1200';
+                document.getElementById('banner-bg').style.backgroundImage = `url('${bannerUrl}')`;
                 init();
             }
         }
@@ -400,7 +408,12 @@
 
         // 匯出 / 匯入功能 (利用 base64 編碼轉換 json 避免特殊字元問題)
         function exportData() {
-            const dataStr = btoa(encodeURIComponent(JSON.stringify(itineraryData)));
+            // 確保匯出的資料包含封面圖
+            const exportObj = {
+                itinerary: itineraryData,
+                banner: bannerUrl
+            };
+            const dataStr = btoa(encodeURIComponent(JSON.stringify(exportObj)));
             // 由於不能用 alert/prompt，我們用一個簡單自製對話框 (或直接寫進剪貼簿)
             try {
                 navigator.clipboard.writeText(dataStr);
@@ -446,15 +459,21 @@
                 if(code) {
                     try {
                         const parsedData = JSON.parse(decodeURIComponent(atob(code)));
-                        if(parsedData && parsedData.day1 && parsedData.day2) {
+                        // 檢查是新版包含 banner 的格式，還是舊版純行程格式
+                        if(parsedData.itinerary) {
+                            itineraryData = parsedData.itinerary;
+                            bannerUrl = parsedData.banner || 'https://images.unsplash.com/photo-1578465191845-f09db0cdcf3c?auto=format&fit=crop&q=80&w=1200';
+                        } else if(parsedData.day1 && parsedData.day2) {
                             itineraryData = parsedData;
-                            saveData();
-                            renderDay('day1');
-                            renderDay('day2');
-                            importModal.remove();
                         } else {
                             throw new Error("Invalid format");
                         }
+                        
+                        document.getElementById('banner-bg').style.backgroundImage = `url('${bannerUrl}')`;
+                        saveData();
+                        renderDay('day1');
+                        renderDay('day2');
+                        importModal.remove();
                     } catch(e) {
                         // 替換 alert
                         const errorMsg = document.createElement('div');
@@ -466,51 +485,44 @@
             };
         }
 
-        // 處理封面圖片上傳與壓縮
-        function handleBannerUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        // 處理封面圖片更改 (改為輸入網址 - 升級為精美彈窗)
+        function changeBannerUrl() {
+            const bgModal = document.createElement('div');
+            bgModal.className = "fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center px-4 backdrop-blur-sm transition-opacity";
+            bgModal.innerHTML = `
+                <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl transform transition-all">
+                    <h3 class="font-bold text-lg mb-2 text-gray-800"><i class="fas fa-image text-blue-500 mr-2"></i>更換封面圖片</h3>
+                    <p class="text-xs text-gray-500 mb-4">請貼上您喜歡的圖片網址 (例如 FB、IG 或圖床連結)。更換後，匯出行程時會一併保留這張封面喔！</p>
+                    <input type="text" id="bg-url-input" class="w-full border border-gray-300 rounded-lg p-3 text-sm mb-5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition" placeholder="https://..." value="${bannerUrl}">
+                    <div class="flex justify-end gap-3">
+                        <button id="cancel-bg" class="px-4 py-2 text-sm text-gray-600 font-bold hover:bg-gray-100 rounded-lg transition">取消</button>
+                        <button id="confirm-bg" class="px-4 py-2 text-sm bg-blue-600 text-white font-bold rounded-lg shadow hover:bg-blue-700 transition">確定更換</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(bgModal);
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    // 使用 Canvas 壓縮圖片，避免 localStorage 爆量 (限制最大寬度 1200px)
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const MAX_WIDTH = 1200;
-                    let width = img.width;
-                    let height = img.height;
+            const inputElement = document.getElementById('bg-url-input');
+            inputElement.select(); // 自動全選現有網址，方便直接貼上蓋掉
 
-                    if (width > MAX_WIDTH) {
-                        height *= MAX_WIDTH / width;
-                        width = MAX_WIDTH;
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    // 轉存為 70% 品質的 JPEG 以節省空間
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7); 
+            document.getElementById('cancel-bg').onclick = () => bgModal.remove();
+            
+            document.getElementById('confirm-bg').onclick = () => {
+                const url = inputElement.value.trim();
+                if (url) {
+                    bannerUrl = url;
+                    document.getElementById('banner-bg').style.backgroundImage = `url('${bannerUrl}')`;
+                    saveData(); // 存檔，之後匯出就能帶走這張封面
                     
-                    // 替換背景圖
-                    document.getElementById('banner-bg').style.backgroundImage = `url('${dataUrl}')`;
-                    
-                    try {
-                        localStorage.setItem('tainanTripBanner', dataUrl);
-                    } catch (err) {
-                        console.error('儲存圖片失敗:', err);
-                        const toast = document.createElement('div');
-                        toast.className = "fixed top-20 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm";
-                        toast.innerHTML = '<i class="fas fa-exclamation-triangle"></i> 圖片檔案太大，您的瀏覽器無法快取儲存。';
-                        document.body.appendChild(toast);
-                        setTimeout(() => toast.remove(), 3000);
-                    }
-                };
-                img.src = e.target.result;
+                    // 顯示成功小提示
+                    const toast = document.createElement('div');
+                    toast.className = "fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm";
+                    toast.innerHTML = '<i class="fas fa-check-circle text-green-400"></i> 封面已成功更新！';
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 2500);
+                }
+                bgModal.remove();
             };
-            reader.readAsDataURL(file);
         }
 
         // 啟動應用
