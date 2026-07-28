@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- 引入 SortableJS 用於拖曳排序 -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <!-- 引入 Firebase (Realtime Database) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
     <style>
         body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background-color: #f3f4f6; }
         .timeline-line {
@@ -27,9 +30,23 @@
         /* 隱藏捲軸但可滾動 (Modal用) */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* 同步狀態指示 */
+        #sync-status {
+            position: fixed; bottom: 16px; right: 16px; z-index: 40;
+            font-size: 11px; padding: 4px 10px; border-radius: 999px;
+            display: flex; align-items: center; gap: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            transition: all 0.3s;
+        }
     </style>
 </head>
 <body class="text-gray-800 pb-20 relative">
+
+    <!-- 同步狀態小標籤 -->
+    <div id="sync-status" class="bg-gray-800 text-white">
+        <i class="fas fa-circle-notch fa-spin"></i> <span id="sync-status-text">連線中...</span>
+    </div>
 
     <!-- 頂部導航 / 封面 -->
     <div id="banner-bg" class="relative h-64 w-full bg-cover bg-center transition-all duration-500" style="background-image: url('https://images.unsplash.com/photo-1578465191845-f09db0cdcf3c?auto=format&fit=crop&q=80&w=1200');">
@@ -55,9 +72,9 @@
             </button>
         </div>
         <div class="absolute bottom-6 left-6 text-white">
-            <span class="bg-purple-600 text-xs px-2 py-1 rounded-md font-bold mb-2 inline-block shadow"><i class="fas fa-edit"></i> 互動編輯版</span>
+            <span class="bg-purple-600 text-xs px-2 py-1 rounded-md font-bold mb-2 inline-block shadow"><i class="fas fa-cloud"></i> 雲端同步版</span>
             <h1 class="text-3xl font-black drop-shadow-lg">台南兩天一夜</h1>
-            <p class="text-sm font-medium mt-1 drop-shadow-md opacity-90"><i class="fas fa-info-circle"></i> 可拖曳排序、點擊修改行程</p>
+            <p class="text-sm font-medium mt-1 drop-shadow-md opacity-90"><i class="fas fa-info-circle"></i> 可拖曳排序、點擊修改行程，任何裝置編輯後自動同步</p>
         </div>
     </div>
 
@@ -192,7 +209,26 @@
     </div>
 
     <script>
-        // 預設資料 (對應您原本的行程)
+        // =====================================================================
+        // ★★★ 請把下面換成你自己在 Firebase Console 複製出來的 firebaseConfig ★★★
+        // Console → Project settings → 一般設定 → 你的應用程式 → SDK 設定和配置
+        // =====================================================================
+        const firebaseConfig = {
+  	 apiKey: "AIzaSyAEXW6NRzYxXlaFEAjIyc5i0EBMJCtEdLA",
+ 	 authDomain: "short-trip-cdb79.firebaseapp.com",
+ 	 databaseURL: "https://short-trip-cdb79-default-rtdb.asia-southeast1.firebasedatabase.app",
+ 	 projectId: "short-trip-cdb79",
+ 	 storageBucket: "short-trip-cdb79.firebasestorage.app",
+ 	 messagingSenderId: "467553960521",
+ 	 appId: "1:467553960521:web:6135a2daedde8aa394f598",
+ 	 measurementId: "G-0THHP0CGRN"
+	};
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const tripRef = db.ref('trips/tainan');
+
+        // 預設資料 (Firebase 尚無任何資料時，第一次會自動寫入這份當初始值)
         const defaultData = {
             day1: [
                 { id: '1-1', time: '08:30', title: '出發・沿西濱向北', desc: '從高雄出發。趁早晨精神好直奔主題樂園，車上時間讓孩子補個眠。', icon: 'fa-car', color: 'blue', img: '' },
@@ -209,10 +245,11 @@
                 { id: '2-4', time: '17:00', title: '晚餐：魚翅火鍋', desc: '結束一天的行程，在回高雄的順路途中，找一間熱呼呼、湯頭鮮美的魚翅火鍋犒賞全家人！', icon: 'fa-utensils', color: 'blue', img: '' }
             ]
         };
+        const defaultBanner = 'https://images.unsplash.com/photo-1578465191845-f09db0cdcf3c?auto=format&fit=crop&q=80&w=1200';
 
-        let itineraryData = {};
-        // 新增：儲存封面網址的全域變數
-        let bannerUrl = 'https://images.unsplash.com/photo-1578465191845-f09db0cdcf3c?auto=format&fit=crop&q=80&w=1200';
+        let itineraryData = { day1: [], day2: [] };
+        let bannerUrl = defaultBanner;
+        let sortableInitialized = false;
 
         // 顏色映射表
         const colorMap = {
@@ -225,28 +262,63 @@
             stone: { bg: 'bg-stone-200', text: 'text-stone-600' }
         };
 
-        // 初始化載入
-        function init() {
-            // 從 localStorage 讀取資料，若無則使用預設
-            const savedData = localStorage.getItem('tainanTripData');
-            if (savedData) {
-                try { 
-                    const parsed = JSON.parse(savedData);
-                    itineraryData = parsed.itinerary || parsed; // 相容舊版資料結構
-                    bannerUrl = parsed.banner || bannerUrl;
-                } catch(e) { 
-                    itineraryData = JSON.parse(JSON.stringify(defaultData)); 
-                }
-            } else {
-                itineraryData = JSON.parse(JSON.stringify(defaultData));
+        function setSyncStatus(state) {
+            const el = document.getElementById('sync-status');
+            const text = document.getElementById('sync-status-text');
+            if (state === 'connected') {
+                el.className = 'bg-emerald-600 text-white';
+                el.querySelector('i').className = 'fas fa-cloud';
+                text.innerText = '已同步';
+                setTimeout(() => { el.style.opacity = '0.5'; }, 1500);
+            } else if (state === 'connecting') {
+                el.style.opacity = '1';
+                el.className = 'bg-gray-800 text-white';
+                el.querySelector('i').className = 'fas fa-circle-notch fa-spin';
+                text.innerText = '連線中...';
+            } else if (state === 'error') {
+                el.style.opacity = '1';
+                el.className = 'bg-red-600 text-white';
+                el.querySelector('i').className = 'fas fa-triangle-exclamation';
+                text.innerText = '連線失敗';
+            } else if (state === 'saving') {
+                el.style.opacity = '1';
+                el.className = 'bg-blue-600 text-white';
+                el.querySelector('i').className = 'fas fa-circle-notch fa-spin';
+                text.innerText = '儲存中...';
             }
+        }
 
-            // 更新封面圖
-            document.getElementById('banner-bg').style.backgroundImage = `url('${bannerUrl}')`;
+        // 初始化：監聽 Firebase 即時資料
+        function init() {
+            setSyncStatus('connecting');
 
-            renderDay('day1');
-            renderDay('day2');
-            initSortable();
+            tripRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+
+                if (data && data.itinerary) {
+                    itineraryData = data.itinerary;
+                    bannerUrl = data.banner || defaultBanner;
+                } else {
+                    // 資料庫是空的：第一次使用，寫入預設行程當初始值
+                    itineraryData = JSON.parse(JSON.stringify(defaultData));
+                    bannerUrl = defaultBanner;
+                    tripRef.set({ itinerary: itineraryData, banner: bannerUrl });
+                }
+
+                document.getElementById('banner-bg').style.backgroundImage = `url('${bannerUrl}')`;
+                renderDay('day1');
+                renderDay('day2');
+
+                if (!sortableInitialized) {
+                    initSortable();
+                    sortableInitialized = true;
+                }
+
+                setSyncStatus('connected');
+            }, (error) => {
+                console.error('Firebase 讀取失敗:', error);
+                setSyncStatus('error');
+            });
         }
 
         // 渲染單日行程
@@ -254,7 +326,7 @@
             const container = document.getElementById(`${dayKey}-list`);
             container.innerHTML = '';
             
-            itineraryData[dayKey].forEach((item, index) => {
+            (itineraryData[dayKey] || []).forEach((item) => {
                 const cMap = colorMap[item.color] || colorMap.blue;
                 const imgHtml = item.img ? `
                     <div class="rounded-xl overflow-hidden h-40 bg-gray-100 mb-2 mt-2">
@@ -268,7 +340,6 @@
                             <i class="fas ${item.icon}"></i>
                         </div>
                         <div class="bg-white border border-transparent group-hover:border-gray-200 group-hover:shadow-md rounded-xl p-3 -mt-3 transition-all relative">
-                            <!-- 操作列 (隱藏，hover顯示) -->
                             <div class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition flex gap-2">
                                 <button onclick="editItem('${dayKey}', '${item.id}')" class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center hover:bg-blue-100">
                                     <i class="fas fa-pencil-alt"></i>
@@ -291,7 +362,7 @@
             });
         }
 
-        // 初始化拖曳功能
+        // 初始化拖曳功能 (只需綁定一次，容器本身不會被替換)
         function initSortable() {
             ['day1', 'day2'].forEach(dayKey => {
                 const el = document.getElementById(`${dayKey}-list`);
@@ -300,32 +371,38 @@
                     animation: 150,
                     ghostClass: 'sortable-ghost',
                     onEnd: function (evt) {
-                        // 更新資料陣列排序
                         const movedItem = itineraryData[dayKey].splice(evt.oldIndex, 1)[0];
                         itineraryData[dayKey].splice(evt.newIndex, 0, movedItem);
+                        renderDay(dayKey);
                         saveData();
-                        renderDay(dayKey); // 重新渲染修正最後一條線的CSS
                     },
                 });
             });
         }
 
-        // 資料操作
+        // 寫入 Firebase (取代原本的 localStorage)
         function saveData() {
-            // 將行程與封面網址包裝在一起儲存
-            const dataToSave = {
+            setSyncStatus('saving');
+            tripRef.set({
                 itinerary: itineraryData,
                 banner: bannerUrl
-            };
-            localStorage.setItem('tainanTripData', JSON.stringify(dataToSave));
+            }).then(() => {
+                setSyncStatus('connected');
+            }).catch((err) => {
+                console.error('儲存失敗:', err);
+                setSyncStatus('error');
+                alert('儲存失敗，請檢查網路連線後再試一次');
+            });
         }
 
         function resetData() {
             if(confirm("確定要放棄所有修改，還原成最初的行程嗎？")) {
-                localStorage.removeItem('tainanTripData');
-                bannerUrl = 'https://images.unsplash.com/photo-1578465191845-f09db0cdcf3c?auto=format&fit=crop&q=80&w=1200';
+                itineraryData = JSON.parse(JSON.stringify(defaultData));
+                bannerUrl = defaultBanner;
                 document.getElementById('banner-bg').style.backgroundImage = `url('${bannerUrl}')`;
-                init();
+                renderDay('day1');
+                renderDay('day2');
+                saveData();
             }
         }
 
@@ -334,7 +411,7 @@
             document.getElementById('edit-modal').classList.remove('hidden');
             document.getElementById('item-day').value = dayKey;
             
-            if (itemId) { // 編輯
+            if (itemId) {
                 document.getElementById('modal-title').innerText = '編輯行程';
                 document.getElementById('btn-delete').classList.remove('hidden');
                 
@@ -346,7 +423,7 @@
                 document.getElementById('item-color').value = item.color;
                 document.getElementById('item-icon').value = item.icon;
                 document.getElementById('item-img').value = item.img || '';
-            } else { // 新增
+            } else {
                 document.getElementById('modal-title').innerText = '新增行程';
                 document.getElementById('btn-delete').classList.add('hidden');
                 
@@ -384,13 +461,13 @@
 
             const index = itineraryData[dayKey].findIndex(i => i.id === itemId);
             if (index > -1) {
-                itineraryData[dayKey][index] = newData; // 更新
+                itineraryData[dayKey][index] = newData;
             } else {
-                itineraryData[dayKey].push(newData); // 新增
+                itineraryData[dayKey].push(newData);
             }
             
-            saveData();
             renderDay(dayKey);
+            saveData();
             closeModal();
         }
 
@@ -400,32 +477,27 @@
                 const itemId = document.getElementById('item-id').value;
                 
                 itineraryData[dayKey] = itineraryData[dayKey].filter(i => i.id !== itemId);
-                saveData();
                 renderDay(dayKey);
+                saveData();
                 closeModal();
             }
         }
 
-        // 匯出 / 匯入功能 (利用 base64 編碼轉換 json 避免特殊字元問題)
+        // 匯出 / 匯入功能 (仍保留，作為離線備份/分享用)
         function exportData() {
-            // 確保匯出的資料包含封面圖
             const exportObj = {
                 itinerary: itineraryData,
                 banner: bannerUrl
             };
             const dataStr = btoa(encodeURIComponent(JSON.stringify(exportObj)));
-            // 由於不能用 alert/prompt，我們用一個簡單自製對話框 (或直接寫進剪貼簿)
             try {
                 navigator.clipboard.writeText(dataStr);
-                
-                // 臨時顯示個小提示
                 const toast = document.createElement('div');
                 toast.className = "fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm";
                 toast.innerHTML = '<i class="fas fa-check-circle text-green-400"></i> 行程代碼已複製！趕快貼上傳給朋友吧！';
                 document.body.appendChild(toast);
                 setTimeout(() => toast.remove(), 3000);
             } catch (err) {
-                // 如果瀏覽器阻擋剪貼簿，提供手動複製的輸入框
                 const input = document.createElement('input');
                 input.value = dataStr;
                 document.body.appendChild(input);
@@ -436,13 +508,12 @@
         }
 
         function importData() {
-            // 建立一個臨時的輸入視窗
             const importModal = document.createElement('div');
             importModal.className = "fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center px-4 backdrop-blur-sm";
             importModal.innerHTML = `
                 <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-2xl">
                     <h3 class="font-bold text-lg mb-2 text-gray-800">匯入行程代碼</h3>
-                    <p class="text-xs text-gray-500 mb-4">貼上朋友分享給您的代碼。注意：這將會覆蓋您目前的行程。</p>
+                    <p class="text-xs text-gray-500 mb-4">貼上朋友分享給您的代碼。注意：這將會覆蓋雲端目前的行程，所有裝置都會看到新版本。</p>
                     <textarea id="import-text" rows="4" class="w-full border rounded-lg p-2 text-xs mb-4 outline-none focus:border-blue-500" placeholder="貼上代碼..."></textarea>
                     <div class="flex justify-end gap-2">
                         <button id="cancel-import" class="px-4 py-2 text-sm text-gray-500 font-bold hover:bg-gray-100 rounded-lg transition">取消</button>
@@ -459,10 +530,9 @@
                 if(code) {
                     try {
                         const parsedData = JSON.parse(decodeURIComponent(atob(code)));
-                        // 檢查是新版包含 banner 的格式，還是舊版純行程格式
                         if(parsedData.itinerary) {
                             itineraryData = parsedData.itinerary;
-                            bannerUrl = parsedData.banner || 'https://images.unsplash.com/photo-1578465191845-f09db0cdcf3c?auto=format&fit=crop&q=80&w=1200';
+                            bannerUrl = parsedData.banner || defaultBanner;
                         } else if(parsedData.day1 && parsedData.day2) {
                             itineraryData = parsedData;
                         } else {
@@ -470,12 +540,11 @@
                         }
                         
                         document.getElementById('banner-bg').style.backgroundImage = `url('${bannerUrl}')`;
-                        saveData();
                         renderDay('day1');
                         renderDay('day2');
+                        saveData();
                         importModal.remove();
                     } catch(e) {
-                        // 替換 alert
                         const errorMsg = document.createElement('div');
                         errorMsg.className = "text-red-500 text-xs mt-2 font-bold";
                         errorMsg.innerText = "代碼格式錯誤，請確認是否有複製完整。";
@@ -485,14 +554,14 @@
             };
         }
 
-        // 處理封面圖片更改 (改為輸入網址 - 升級為精美彈窗)
+        // 處理封面圖片更改
         function changeBannerUrl() {
             const bgModal = document.createElement('div');
             bgModal.className = "fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center px-4 backdrop-blur-sm transition-opacity";
             bgModal.innerHTML = `
                 <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl transform transition-all">
                     <h3 class="font-bold text-lg mb-2 text-gray-800"><i class="fas fa-image text-blue-500 mr-2"></i>更換封面圖片</h3>
-                    <p class="text-xs text-gray-500 mb-4">請貼上您喜歡的圖片網址 (例如 FB、IG 或圖床連結)。更換後，匯出行程時會一併保留這張封面喔！</p>
+                    <p class="text-xs text-gray-500 mb-4">請貼上您喜歡的圖片網址。更換後會同步到雲端，所有裝置都會看到新封面。</p>
                     <input type="text" id="bg-url-input" class="w-full border border-gray-300 rounded-lg p-3 text-sm mb-5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition" placeholder="https://..." value="${bannerUrl}">
                     <div class="flex justify-end gap-3">
                         <button id="cancel-bg" class="px-4 py-2 text-sm text-gray-600 font-bold hover:bg-gray-100 rounded-lg transition">取消</button>
@@ -503,7 +572,7 @@
             document.body.appendChild(bgModal);
 
             const inputElement = document.getElementById('bg-url-input');
-            inputElement.select(); // 自動全選現有網址，方便直接貼上蓋掉
+            inputElement.select();
 
             document.getElementById('cancel-bg').onclick = () => bgModal.remove();
             
@@ -512,9 +581,8 @@
                 if (url) {
                     bannerUrl = url;
                     document.getElementById('banner-bg').style.backgroundImage = `url('${bannerUrl}')`;
-                    saveData(); // 存檔，之後匯出就能帶走這張封面
+                    saveData();
                     
-                    // 顯示成功小提示
                     const toast = document.createElement('div');
                     toast.className = "fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm";
                     toast.innerHTML = '<i class="fas fa-check-circle text-green-400"></i> 封面已成功更新！';
@@ -525,7 +593,6 @@
             };
         }
 
-        // 啟動應用
         window.onload = init;
     </script>
 </body>
