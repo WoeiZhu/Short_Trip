@@ -3,67 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台南兩天一夜・避暑親子輕鬆遊</title>
+    <title>台南兩天一夜・互動排程版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入 SortableJS 用於拖曳排序 -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
         body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background-color: #f3f4f6; }
         .timeline-line {
-            position: absolute;
-            left: 24px;
-            top: 40px;
-            bottom: -20px;
-            width: 2px;
-            background-color: #e5e7eb;
-            z-index: 0;
+            position: absolute; left: 24px; top: 40px; bottom: -20px;
+            width: 2px; background-color: #e5e7eb; z-index: 0;
         }
-        .timeline-dot {
-            position: relative;
-            z-index: 1;
-        }
-        .img-hover-zoom {
-            transition: transform 0.5s ease;
-        }
-        .img-hover-zoom:hover {
-            transform: scale(1.05);
-        }
-        /* 隱藏最後一個 timeline-line */
+        .timeline-dot { position: relative; z-index: 1; }
+        .img-hover-zoom { transition: transform 0.5s ease; }
+        .img-hover-zoom:hover { transform: scale(1.05); }
         .timeline-item:last-child .timeline-line { display: none; }
         
-        .choice-divider {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            margin: 1.5rem 0;
-        }
-        .choice-divider::before, .choice-divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 2px dashed #d1d5db;
-        }
-        .choice-divider span {
-            padding: 0 10px;
-            color: #6b7280;
-            font-weight: bold;
-            font-size: 0.875rem;
-        }
+        /* 拖曳時的樣式 */
+        .sortable-ghost { opacity: 0.4; background-color: #f9fafb; border-radius: 0.5rem; }
+        .drag-handle { cursor: grab; }
+        .drag-handle:active { cursor: grabbing; }
+        
+        /* 隱藏捲軸但可滾動 (Modal用) */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="text-gray-800 pb-20">
+<body class="text-gray-800 pb-20 relative">
 
     <!-- 頂部導航 / 封面 -->
-    <div class="relative h-64 w-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1578465191845-f09db0cdcf3c?auto=format&fit=crop&q=80&w=1200');">
+    <div id="banner-bg" class="relative h-64 w-full bg-cover bg-center transition-all duration-500" style="background-image: url('https://images.unsplash.com/photo-1578465191845-f09db0cdcf3c?auto=format&fit=crop&q=80&w=1200');">
         <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+        
+        <!-- 隱藏的上傳輸入框 -->
+        <input type="file" id="banner-upload" accept="image/*" class="hidden" onchange="handleBannerUpload(event)">
+        <!-- 編輯封面按鈕 -->
+        <button onclick="document.getElementById('banner-upload').click()" class="absolute bottom-6 right-6 bg-white bg-opacity-20 hover:bg-opacity-90 text-white hover:text-gray-800 w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-all backdrop-blur-sm z-10" title="更換封面圖片">
+            <i class="fas fa-camera text-lg"></i>
+        </button>
+
         <div class="absolute top-4 left-4">
             <a href="index.html" class="bg-white bg-opacity-80 text-gray-800 px-4 py-2 rounded-full font-bold shadow-md hover:bg-white transition flex items-center gap-2 text-sm backdrop-blur-sm">
-                <i class="fas fa-arrow-left"></i> 回我的旅遊首頁
+                <i class="fas fa-arrow-left"></i> 首頁
             </a>
         </div>
+        <!-- 匯出/匯入工具列 -->
+        <div class="absolute top-4 right-4 flex gap-2">
+            <button onclick="exportData()" class="bg-blue-600 bg-opacity-90 text-white px-3 py-2 rounded-full font-bold shadow-md hover:bg-blue-700 transition flex items-center gap-2 text-xs backdrop-blur-sm">
+                <i class="fas fa-share-nodes"></i> 匯出分享
+            </button>
+            <button onclick="importData()" class="bg-emerald-600 bg-opacity-90 text-white px-3 py-2 rounded-full font-bold shadow-md hover:bg-emerald-700 transition flex items-center gap-2 text-xs backdrop-blur-sm">
+                <i class="fas fa-download"></i> 匯入
+            </button>
+        </div>
         <div class="absolute bottom-6 left-6 text-white">
-            <span class="bg-blue-600 text-xs px-2 py-1 rounded-md font-bold mb-2 inline-block">親子友善</span>
-            <span class="bg-orange-500 text-xs px-2 py-1 rounded-md font-bold mb-2 inline-block ml-1">推車OK</span>
+            <span class="bg-purple-600 text-xs px-2 py-1 rounded-md font-bold mb-2 inline-block shadow"><i class="fas fa-edit"></i> 互動編輯版</span>
             <h1 class="text-3xl font-black drop-shadow-lg">台南兩天一夜</h1>
-            <p class="text-sm font-medium mt-1 drop-shadow-md opacity-90"><i class="fas fa-sun text-yellow-300"></i> 生態體驗・泥漿溫泉・美食之旅</p>
+            <p class="text-sm font-medium mt-1 drop-shadow-md opacity-90"><i class="fas fa-info-circle"></i> 可拖曳排序、點擊修改行程</p>
         </div>
     </div>
 
@@ -74,240 +70,451 @@
         <div class="mb-10 bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
             <div class="bg-blue-50 px-5 py-4 border-b border-blue-100 flex justify-between items-center">
                 <h2 class="text-xl font-bold text-blue-800"><i class="fas fa-flag text-blue-500 mr-2"></i>Day 1: 動物生態與蓮花溫泉</h2>
+                <button onclick="openModal('day1')" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg shadow transition flex items-center gap-1 font-bold">
+                    <i class="fas fa-plus"></i> 新增
+                </button>
             </div>
             
-            <!-- Day 1 路線地圖區塊 -->
             <div class="p-4 bg-gray-50 border-b border-gray-100">
                 <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-bold text-gray-700 text-sm"><i class="fas fa-map-marked-alt text-gray-500 mr-1"></i> 第一天路線總覽</h3>
+                    <h3 class="font-bold text-gray-700 text-sm"><i class="fas fa-map-marked-alt text-gray-500 mr-1"></i> 路線圖</h3>
                     <a href="https://www.google.com/maps/dir/高雄/頑皮世界野生動物園/學甲區/白河蓮花公園/關子嶺富野溫泉會館/關子嶺紅雞城" target="_blank" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-sm transition flex items-center gap-1">
-                        <i class="fas fa-location-arrow"></i> 開啟 App 導航
+                        <i class="fas fa-location-arrow"></i> 導航
                     </a>
                 </div>
-                <div class="rounded-xl overflow-hidden border border-gray-200 shadow-inner w-full h-64 bg-gray-200">
-                    <iframe 
-                        width="100%" 
-                        height="100%" 
-                        frameborder="0" 
-                        style="border:0" 
-                        src="https://maps.google.com/maps?saddr=高雄&daddr=頑皮世界野生動物園+to:學甲+to:白河蓮花公園+to:關子嶺富野溫泉會館+to:關子嶺紅雞城&output=embed" 
-                        allowfullscreen>
-                    </iframe>
-                </div>
-                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> 高雄 ➔ 頑皮世界 ➔ 學甲 ➔ 白河 ➔ 關子嶺</p>
             </div>
 
-            <div class="px-5 py-6">
-                <!-- 行程 1 -->
-                <div class="relative pl-12 mb-8 timeline-item">
-                    <div class="timeline-line"></div>
-                    <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-blue-100 border-4 border-white shadow flex items-center justify-center text-blue-600 text-xs">
-                        <i class="fas fa-car"></i>
-                    </div>
-                    <div class="flex items-center justify-between mb-1">
-                        <h3 class="font-bold text-lg">出發・沿西濱向北</h3>
-                        <span class="text-xs text-gray-500 font-bold">08:30</span>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-2">從高雄出發。趁早晨精神好直奔主題樂園，車上時間讓孩子補個眠。</p>
-                </div>
-
-                <!-- 行程 2 -->
-                <div class="relative pl-12 mb-8 timeline-item">
-                    <div class="timeline-line"></div>
-                    <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-green-100 border-4 border-white shadow flex items-center justify-center text-green-600 text-xs">
-                        <i class="fas fa-hippo"></i>
-                    </div>
-                    <div class="flex items-center justify-between mb-1">
-                        <h3 class="font-bold text-lg">頑皮世界野生動物園</h3>
-                        <span class="text-xs text-gray-500 font-bold">09:30</span>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-3">趁早上氣溫涼爽，近距離餵食水豚與草羊駝。快中午時可躲進「兩棲爬蟲館」吹冷氣。</p>
-                    <div class="rounded-xl overflow-hidden h-40 bg-gray-100 mb-2">
-                        <img src="https://www.abic.com.tw/upload/wanpi/70.jpg" alt="頑皮世界水豚" class="w-full h-full object-cover img-hover-zoom">
-                    </div>
-                </div>
-
-                <!-- 行程 3 -->
-                <div class="relative pl-12 mb-8 timeline-item">
-                    <div class="timeline-line"></div>
-                    <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-orange-100 border-4 border-white shadow flex items-center justify-center text-orange-600 text-xs">
-                        <i class="fas fa-store"></i>
-                    </div>
-                    <div class="flex items-center justify-between mb-1">
-                        <h3 class="font-bold text-lg">學甲・午餐時光</h3>
-                        <span class="text-xs text-gray-500 font-bold">12:30</span>
-                    </div>
-                    <p class="text-sm text-gray-600">離開動物園後，就近前往學甲市區。可找間評價不錯的小吃店簡單填飽肚子。</p>
-					<div class="rounded-xl overflow-hidden h-40 bg-gray-100 mb-2">
-                        <img src="https://pimg.1px.tw/blue90184/1758094318-1122015345-g.jpg" alt="學甲・鵝肉" class="w-full h-full object-cover img-hover-zoom">
-                    </div>
-                </div>
-
-                <!-- 行程 4 -->
-                <div class="relative pl-12 mb-8 timeline-item">
-                    <div class="timeline-line"></div>
-                    <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-pink-100 border-4 border-white shadow flex items-center justify-center text-pink-600 text-xs">
-                        <i class="fab fa-pagelines"></i>
-                    </div>
-                    <div class="flex items-center justify-between mb-1">
-                        <h3 class="font-bold text-lg">白河大王蓮</h3>
-                        <span class="text-xs text-gray-500 font-bold">14:00</span>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-3">來到白河區，體驗乘坐「大王蓮」。小朋友坐在巨大的蓮葉上拍照非常吸睛，是難得的生態體驗！</p>
-                    <div class="rounded-xl overflow-hidden h-40 bg-gray-100 mb-2">
-                        <img src="https://cdn2.ettoday.net/images/2673/d2673609.jpg" alt="大王蓮示意圖" class="w-full h-full object-cover img-hover-zoom">
-                    </div>
-                </div>
-
-                <!-- 行程 5 -->
-                <div class="relative pl-12 mb-8 timeline-item">
-                    <div class="timeline-line"></div>
-                    <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-purple-100 border-4 border-white shadow flex items-center justify-center text-purple-600 text-xs">
-                        <i class="fas fa-hotel"></i>
-                    </div>
-                    <div class="flex items-center justify-between mb-1">
-                        <h3 class="font-bold text-lg">入住：富野溫泉會館</h3>
-                        <span class="text-xs text-gray-500 font-bold">15:30</span>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-2">開車上山進飯店。在舒適冷氣房內安頓行李、沖洗汗水，避開南部午後最悶熱的時段，或直接享受泥漿溫泉。</p>
-                </div>
-
-                <!-- 行程 6 -->
-                <div class="relative pl-12 timeline-item">
-                    <div class="timeline-line"></div>
-                    <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-red-100 border-4 border-white shadow flex items-center justify-center text-red-600 text-xs">
-                        <i class="fas fa-drumstick-bite"></i>
-                    </div>
-                    <div class="flex items-center justify-between mb-1">
-                        <h3 class="font-bold text-lg">晚餐：關子嶺紅雞城</h3>
-                        <span class="text-xs text-gray-500 font-bold">17:30</span>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-3">氣溫轉涼後出門享用特色晚餐。必點招牌「甕窯雞」，外皮酥脆肉質多汁，搭配雞油拌飯與野菜超滿足。</p>
-                    <div class="rounded-xl overflow-hidden h-40 bg-gray-100 mb-2">
-                        <img src="https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?auto=format&fit=crop&q=80&w=600" alt="甕窯雞示意圖" class="w-full h-full object-cover img-hover-zoom">
-                    </div>
-                </div>
-
-            </div>
+            <!-- 動態渲染 Day 1 列表 -->
+            <div id="day1-list" class="px-5 py-6"></div>
         </div>
 
         <!-- ================= DAY 2 ================= -->
         <div class="mb-10 bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
             <div class="bg-emerald-50 px-5 py-4 border-b border-emerald-100 flex justify-between items-center">
                 <h2 class="text-xl font-bold text-emerald-800"><i class="fas fa-leaf text-emerald-500 mr-2"></i>Day 2: 山林奇景與彈性探索</h2>
+                <button onclick="openModal('day2')" class="text-sm bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg shadow transition flex items-center gap-1 font-bold">
+                    <i class="fas fa-plus"></i> 新增
+                </button>
             </div>
-
-            <!-- Day 2 路線地圖區塊 -->
+            
             <div class="p-4 bg-gray-50 border-b border-gray-100">
                 <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-bold text-gray-700 text-sm"><i class="fas fa-map-marked-alt text-gray-500 mr-1"></i> 第二天路線 (預設左鎮路線)</h3>
+                    <h3 class="font-bold text-gray-700 text-sm"><i class="fas fa-map-marked-alt text-gray-500 mr-1"></i> 路線圖</h3>
                     <a href="https://www.google.com/maps/dir/關子嶺富野溫泉會館/水火同源/左鎮化石園區/魚翅火鍋" target="_blank" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-sm transition flex items-center gap-1">
-                        <i class="fas fa-location-arrow"></i> 開啟 App 導航
+                        <i class="fas fa-location-arrow"></i> 導航
                     </a>
                 </div>
-                <div class="rounded-xl overflow-hidden border border-gray-200 shadow-inner w-full h-64 bg-gray-200">
-                    <iframe 
-                        width="100%" 
-                        height="100%" 
-                        frameborder="0" 
-                        style="border:0" 
-                        src="https://maps.google.com/maps?saddr=關子嶺富野溫泉會館&daddr=水火同源+to:左鎮化石園區+to:魚翅火鍋&output=embed" 
-                        allowfullscreen>
-                    </iframe>
-                </div>
-                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> 退房 ➔ 水火同源 ➔ (左鎮或七股) ➔ 晚餐魚翅火鍋</p>
             </div>
 
-            <div class="px-5 py-6">
-                <!-- 行程 1 -->
-                <div class="relative pl-12 mb-8 timeline-item">
-                    <div class="timeline-line"></div>
-                    <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-purple-100 border-4 border-white shadow flex items-center justify-center text-purple-600 text-xs">
-                        <i class="fas fa-bed"></i>
-                    </div>
-                    <div class="flex items-center justify-between mb-1">
-                        <h3 class="font-bold text-lg">悠閒晨光與退房</h3>
-                        <span class="text-xs text-gray-500 font-bold">08:00 - 10:00</span>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-2">享用飯店早餐，享受山林晨間涼爽舒適的空氣，隨後整理行李辦理退房。</p>
-                </div>
-
-                <!-- 行程 2 -->
-                <div class="relative pl-12 mb-4 timeline-item">
-                    <div class="timeline-line"></div>
-                    <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-red-100 border-4 border-white shadow flex items-center justify-center text-red-500 text-xs">
-                        <i class="fas fa-fire-alt"></i>
-                    </div>
-                    <div class="flex items-center justify-between mb-1">
-                        <h3 class="font-bold text-lg">水火同源</h3>
-                        <span class="text-xs text-gray-500 font-bold">10:30</span>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-3">順路造訪岩壁洞穴景點，觀賞天然氣與泉水共存燃燒的奇景。木棧道平緩，推車好走。</p>
-                    <div class="rounded-xl overflow-hidden h-40 bg-gray-100 mb-2">
-                        <img src="https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmPE2E5z9xixyICbZu1C01nHj4vOjCSFXsnViPDiyXNHeh1KJdk0eaVJ1kpWb5d-DPIZk0_xfRl3HnpWZKJBdHrBfdRV3lT-B4CvA_2ERhGMoOUrvJXZ8wD7ZC9xWiJbWVDeyqxBQ=s1360-w1360-h1020-rw" alt="水火同源" class="w-full h-full object-cover img-hover-zoom">
-                    </div>
-                </div>
-
-                <!-- 選擇分隔線 -->
-                <div class="relative pl-12 timeline-item">
-                    <div class="timeline-line"></div>
-                    <div class="choice-divider"><span>午後行程二選一</span></div>
-                </div>
-
-                <!-- 行程 3 選擇 A -->
-                <div class="relative pl-12 mb-8 timeline-item">
-                    <div class="timeline-line"></div>
-                    <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-stone-200 border-4 border-white shadow flex items-center justify-center text-stone-600 text-xs">
-                        <i class="fas fa-bone"></i>
-                    </div>
-                    <div class="flex items-center justify-between mb-1">
-                        <h3 class="font-bold text-lg">路線 A：左鎮化石園區</h3>
-                        <span class="text-xs text-gray-500 font-bold">12:30</span>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-3"><b class="text-blue-600">【怕熱首選】</b>全館室內冷氣開放，無障礙設施極佳。豐富恐龍與古生物標本讓孩子舒適探索。</p>
-                    <div class="rounded-xl overflow-hidden h-40 bg-gray-100 mb-2">
-                        <img src="https://lh3.googleusercontent.com/gps-cs-s/AHRPTWl0P4PYBgKCstpjP-z0TKxcxZAhUeyudYPrQIwq07PX4H4PBux_yskhSv-nlq1Xp6PG7rZlRrZTa7WWSAl4npfyTwctn3eDnZwWNi2SlZGAFaau8LJz5ztCXMuAeuz3tVOHgPn9=s1360-w1360-h1020-rw" alt="左鎮化石園區" class="w-full h-full object-cover img-hover-zoom">
-                    </div>
-                </div>
-
-                <!-- 行程 3 選擇 B -->
-                <div class="relative pl-12 mb-8 timeline-item">
-                    <div class="timeline-line"></div>
-                    <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-yellow-100 border-4 border-white shadow flex items-center justify-center text-yellow-600 text-xs">
-                        <i class="fas fa-mountain"></i>
-                    </div>
-                    <div class="flex items-center justify-between mb-1">
-                        <h3 class="font-bold text-lg">路線 B：七股鹽山</h3>
-                        <span class="text-xs text-gray-500 font-bold">12:30</span>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-3"><b class="text-orange-500">【戶外踏青】</b>如果天氣多雲微風，可選擇前往七股爬鹽山、吃鹹冰棒，體驗台灣獨特的鹽田風光。</p>
-                    <div class="rounded-xl overflow-hidden h-40 bg-gray-100 mb-2">
-                        <img src="https://www.abic.com.tw/upload/cigusaltmontain/01.jpg" alt="七股鹽山" class="w-full h-full object-cover img-hover-zoom">
-                    </div>
-                </div>
-
-                <!-- 行程 4 -->
-                <div class="relative pl-12 timeline-item">
-                    <div class="timeline-line"></div>
-                    <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full bg-teal-100 border-4 border-white shadow flex items-center justify-center text-teal-600 text-xs">
-                        <i class="fas fa-soup"></i>
-                    </div>
-                    <div class="flex items-center justify-between mb-1">
-                        <h3 class="font-bold text-lg">晚餐：魚翅火鍋</h3>
-                        <span class="text-xs text-gray-500 font-bold">17:00</span>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-3">結束一天的行程，在回高雄的順路途中（如茄萣或市區），找一間熱呼呼、湯頭鮮美的魚翅火鍋犒賞全家人，為這趟旅程畫下完美句點！</p>
-                </div>
-
-            </div>
+            <!-- 動態渲染 Day 2 列表 -->
+            <div id="day2-list" class="px-5 py-6"></div>
         </div>
-
-        <!-- 結語 -->
+        
         <div class="text-center py-6 mb-10">
-            <p class="text-gray-500 font-medium">吃飽喝足，準備返程回溫暖的家！<br><span class="text-sm mt-1 inline-block">Safe Travels! 🚗💨</span></p>
+            <button onclick="resetData()" class="text-gray-400 hover:text-red-500 text-sm underline transition">
+                重置回預設行程
+            </button>
         </div>
-
     </div>
 
+    <!-- 編輯/新增 Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center px-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-gray-100 px-5 py-3 border-b flex justify-between items-center">
+                <h3 id="modal-title" class="font-bold text-lg text-gray-800">編輯行程</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-xl"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto no-scrollbar flex-1">
+                <input type="hidden" id="item-id">
+                <input type="hidden" id="item-day">
+                
+                <div class="mb-4 flex gap-4">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">時間</label>
+                        <input type="text" id="item-time" placeholder="例如: 08:30" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">顏色</label>
+                        <select id="item-color" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="blue">藍色</option>
+                            <option value="green">綠色</option>
+                            <option value="orange">橘色</option>
+                            <option value="red">紅色</option>
+                            <option value="purple">紫色</option>
+                            <option value="pink">粉色</option>
+                            <option value="stone">灰色</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4 flex gap-4">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">圖標 (FontAwesome)</label>
+                        <select id="item-icon" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="fa-car">🚗 汽車 (fa-car)</option>
+                            <option value="fa-hippo">🦛 動物 (fa-hippo)</option>
+                            <option value="fa-mountain">⛰️ 山 (fa-mountain)</option>
+                            <option value="fa-store">🏪 商店 (fa-store)</option>
+                            <option value="fa-utensils">🍽️ 餐廳 (fa-utensils)</option>
+                            <option value="fa-hotel">🏨 飯店 (fa-hotel)</option>
+                            <option value="fa-fire-alt">🔥 火焰 (fa-fire-alt)</option>
+                            <option value="fa-bone">🦴 化石 (fa-bone)</option>
+                            <option value="fa-camera">📷 拍照 (fa-camera)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-500 mb-1">標題</label>
+                    <input type="text" id="item-title" placeholder="景點或活動名稱" class="w-full border rounded-lg px-3 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-500 mb-1">說明文字</label>
+                    <textarea id="item-desc" rows="3" placeholder="行程細節..." class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+
+                <div class="mb-2">
+                    <label class="block text-xs font-bold text-gray-500 mb-1">圖片網址 (選填)</label>
+                    <input type="text" id="item-img" placeholder="https://..." class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 px-5 py-3 border-t flex justify-between items-center gap-2">
+                <button id="btn-delete" onclick="deleteItem()" class="text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg text-sm font-bold transition">
+                    <i class="fas fa-trash-alt"></i> 刪除
+                </button>
+                <div class="flex gap-2">
+                    <button onclick="closeModal()" class="text-gray-600 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm font-bold transition">取消</button>
+                    <button onclick="saveModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-bold shadow transition">儲存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 預設資料 (對應您原本的行程)
+        const defaultData = {
+            day1: [
+                { id: '1-1', time: '08:30', title: '出發・沿西濱向北', desc: '從高雄出發。趁早晨精神好直奔主題樂園，車上時間讓孩子補個眠。', icon: 'fa-car', color: 'blue', img: '' },
+                { id: '1-2', time: '09:30', title: '頑皮世界野生動物園', desc: '趁早上氣溫涼爽，近距離餵食水豚與草羊駝。快中午時可躲進「兩棲爬蟲館」吹冷氣。', icon: 'fa-hippo', color: 'green', img: 'https://www.abic.com.tw/upload/wanpi/70.jpg' },
+                { id: '1-3', time: '12:30', title: '學甲・午餐時光', desc: '離開動物園後，就近前往學甲市區。可找間評價不錯的小吃店簡單填飽肚子。', icon: 'fa-store', color: 'orange', img: 'https://pimg.1px.tw/blue90184/1758094318-1122015345-g.jpg' },
+                { id: '1-4', time: '14:00', title: '白河大王蓮', desc: '來到白河區，體驗乘坐「大王蓮」。小朋友坐在巨大的蓮葉上拍照非常吸睛，是難得的生態體驗！', icon: 'fa-camera', color: 'pink', img: 'https://cdn2.ettoday.net/images/2673/d2673609.jpg' },
+                { id: '1-5', time: '15:30', title: '入住：富野溫泉會館', desc: '開車上山進飯店。在舒適冷氣房內安頓行李、沖洗汗水，避開南部午後最悶熱的時段，或直接享受泥漿溫泉。', icon: 'fa-hotel', color: 'purple', img: '' },
+                { id: '1-6', time: '17:30', title: '晚餐：關子嶺紅雞城', desc: '氣溫轉涼後出門享用特色晚餐。必點招牌「甕窯雞」，外皮酥脆肉質多汁，搭配雞油拌飯與野菜超滿足。', icon: 'fa-utensils', color: 'red', img: 'https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?auto=format&fit=crop&q=80&w=600' }
+            ],
+            day2: [
+                { id: '2-1', time: '08:00', title: '悠閒晨光與退房', desc: '享用飯店早餐，享受山林晨間涼爽舒適的空氣，隨後整理行李辦理退房。', icon: 'fa-hotel', color: 'purple', img: '' },
+                { id: '2-2', time: '10:30', title: '水火同源', desc: '順路造訪岩壁洞穴景點，觀賞天然氣與泉水共存燃燒的奇景。木棧道平緩，推車好走。', icon: 'fa-fire-alt', color: 'red', img: 'https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmPE2E5z9xixyICbZu1C01nHj4vOjCSFXsnViPDiyXNHeh1KJdk0eaVJ1kpWb5d-DPIZk0_xfRl3HnpWZKJBdHrBfdRV3lT-B4CvA_2ERhGMoOUrvJXZ8wD7ZC9xWiJbWVDeyqxBQ=s1360-w1360-h1020-rw' },
+                { id: '2-3', time: '12:30', title: '左鎮化石園區', desc: '全館室內冷氣開放，無障礙設施極佳。豐富恐龍與古生物標本讓孩子舒適探索。', icon: 'fa-bone', color: 'stone', img: 'https://lh3.googleusercontent.com/gps-cs-s/AHRPTWl0P4PYBgKCstpjP-z0TKxcxZAhUeyudYPrQIwq07PX4H4PBux_yskhSv-nlq1Xp6PG7rZlRrZTa7WWSAl4npfyTwctn3eDnZwWNi2SlZGAFaau8LJz5ztCXMuAeuz3tVOHgPn9=s1360-w1360-h1020-rw' },
+                { id: '2-4', time: '17:00', title: '晚餐：魚翅火鍋', desc: '結束一天的行程，在回高雄的順路途中，找一間熱呼呼、湯頭鮮美的魚翅火鍋犒賞全家人！', icon: 'fa-utensils', color: 'blue', img: '' }
+            ]
+        };
+
+        // 顏色映射表
+        const colorMap = {
+            blue: { bg: 'bg-blue-100', text: 'text-blue-600' },
+            green: { bg: 'bg-green-100', text: 'text-green-600' },
+            orange: { bg: 'bg-orange-100', text: 'text-orange-600' },
+            red: { bg: 'bg-red-100', text: 'text-red-500' },
+            purple: { bg: 'bg-purple-100', text: 'text-purple-600' },
+            pink: { bg: 'bg-pink-100', text: 'text-pink-600' },
+            stone: { bg: 'bg-stone-200', text: 'text-stone-600' }
+        };
+
+        let itineraryData = {};
+
+        // 初始化載入
+        function init() {
+            // 從 localStorage 讀取資料，若無則使用預設
+            const savedData = localStorage.getItem('tainanTripData');
+            if (savedData) {
+                try { itineraryData = JSON.parse(savedData); } catch(e) { itineraryData = JSON.parse(JSON.stringify(defaultData)); }
+            } else {
+                itineraryData = JSON.parse(JSON.stringify(defaultData));
+            }
+
+            // 讀取自訂封面圖片
+            const savedBanner = localStorage.getItem('tainanTripBanner');
+            if (savedBanner) {
+                document.getElementById('banner-bg').style.backgroundImage = `url('${savedBanner}')`;
+            }
+
+            renderDay('day1');
+            renderDay('day2');
+            initSortable();
+        }
+
+        // 渲染單日行程
+        function renderDay(dayKey) {
+            const container = document.getElementById(`${dayKey}-list`);
+            container.innerHTML = '';
+            
+            itineraryData[dayKey].forEach((item, index) => {
+                const cMap = colorMap[item.color] || colorMap.blue;
+                const imgHtml = item.img ? `
+                    <div class="rounded-xl overflow-hidden h-40 bg-gray-100 mb-2 mt-2">
+                        <img src="${item.img}" alt="${item.title}" class="w-full h-full object-cover img-hover-zoom">
+                    </div>` : '';
+
+                const html = `
+                    <div class="relative pl-12 mb-8 timeline-item group" data-id="${item.id}">
+                        <div class="timeline-line"></div>
+                        <div class="timeline-dot absolute left-0 top-0 w-8 h-8 rounded-full ${cMap.bg} border-4 border-white shadow flex items-center justify-center ${cMap.text} text-xs">
+                            <i class="fas ${item.icon}"></i>
+                        </div>
+                        <div class="bg-white border border-transparent group-hover:border-gray-200 group-hover:shadow-md rounded-xl p-3 -mt-3 transition-all relative">
+                            <!-- 操作列 (隱藏，hover顯示) -->
+                            <div class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition flex gap-2">
+                                <button onclick="editItem('${dayKey}', '${item.id}')" class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center hover:bg-blue-100">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center drag-handle hover:text-gray-700">
+                                    <i class="fas fa-grip-vertical"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-2 mb-1 pr-16">
+                                <h3 class="font-bold text-lg text-gray-800">${item.title}</h3>
+                                <span class="text-xs text-gray-500 font-bold bg-gray-100 px-2 py-0.5 rounded">${item.time}</span>
+                            </div>
+                            <p class="text-sm text-gray-600 whitespace-pre-line leading-relaxed">${item.desc}</p>
+                            ${imgHtml}
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // 初始化拖曳功能
+        function initSortable() {
+            ['day1', 'day2'].forEach(dayKey => {
+                const el = document.getElementById(`${dayKey}-list`);
+                new Sortable(el, {
+                    handle: '.drag-handle',
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    onEnd: function (evt) {
+                        // 更新資料陣列排序
+                        const movedItem = itineraryData[dayKey].splice(evt.oldIndex, 1)[0];
+                        itineraryData[dayKey].splice(evt.newIndex, 0, movedItem);
+                        saveData();
+                        renderDay(dayKey); // 重新渲染修正最後一條線的CSS
+                    },
+                });
+            });
+        }
+
+        // 資料操作
+        function saveData() {
+            localStorage.setItem('tainanTripData', JSON.stringify(itineraryData));
+        }
+
+        function resetData() {
+            if(confirm("確定要放棄所有修改，還原成最初的行程嗎？")) {
+                localStorage.removeItem('tainanTripData');
+                localStorage.removeItem('tainanTripBanner');
+                document.getElementById('banner-bg').style.backgroundImage = `url('https://images.unsplash.com/photo-1578465191845-f09db0cdcf3c?auto=format&fit=crop&q=80&w=1200')`;
+                init();
+            }
+        }
+
+        // Modal 操作
+        function openModal(dayKey, itemId = null) {
+            document.getElementById('edit-modal').classList.remove('hidden');
+            document.getElementById('item-day').value = dayKey;
+            
+            if (itemId) { // 編輯
+                document.getElementById('modal-title').innerText = '編輯行程';
+                document.getElementById('btn-delete').classList.remove('hidden');
+                
+                const item = itineraryData[dayKey].find(i => i.id === itemId);
+                document.getElementById('item-id').value = item.id;
+                document.getElementById('item-time').value = item.time;
+                document.getElementById('item-title').value = item.title;
+                document.getElementById('item-desc').value = item.desc;
+                document.getElementById('item-color').value = item.color;
+                document.getElementById('item-icon').value = item.icon;
+                document.getElementById('item-img').value = item.img || '';
+            } else { // 新增
+                document.getElementById('modal-title').innerText = '新增行程';
+                document.getElementById('btn-delete').classList.add('hidden');
+                
+                document.getElementById('item-id').value = 'new-' + Date.now();
+                document.getElementById('item-time').value = '';
+                document.getElementById('item-title').value = '';
+                document.getElementById('item-desc').value = '';
+                document.getElementById('item-color').value = 'blue';
+                document.getElementById('item-icon').value = 'fa-camera';
+                document.getElementById('item-img').value = '';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        function editItem(dayKey, itemId) {
+            openModal(dayKey, itemId);
+        }
+
+        function saveModal() {
+            const dayKey = document.getElementById('item-day').value;
+            const itemId = document.getElementById('item-id').value;
+            
+            const newData = {
+                id: itemId,
+                time: document.getElementById('item-time').value,
+                title: document.getElementById('item-title').value || '未命名行程',
+                desc: document.getElementById('item-desc').value,
+                color: document.getElementById('item-color').value,
+                icon: document.getElementById('item-icon').value,
+                img: document.getElementById('item-img').value
+            };
+
+            const index = itineraryData[dayKey].findIndex(i => i.id === itemId);
+            if (index > -1) {
+                itineraryData[dayKey][index] = newData; // 更新
+            } else {
+                itineraryData[dayKey].push(newData); // 新增
+            }
+            
+            saveData();
+            renderDay(dayKey);
+            closeModal();
+        }
+
+        function deleteItem() {
+            if(confirm("確定要刪除這個行程嗎？")) {
+                const dayKey = document.getElementById('item-day').value;
+                const itemId = document.getElementById('item-id').value;
+                
+                itineraryData[dayKey] = itineraryData[dayKey].filter(i => i.id !== itemId);
+                saveData();
+                renderDay(dayKey);
+                closeModal();
+            }
+        }
+
+        // 匯出 / 匯入功能 (利用 base64 編碼轉換 json 避免特殊字元問題)
+        function exportData() {
+            const dataStr = btoa(encodeURIComponent(JSON.stringify(itineraryData)));
+            // 由於不能用 alert/prompt，我們用一個簡單自製對話框 (或直接寫進剪貼簿)
+            try {
+                navigator.clipboard.writeText(dataStr);
+                
+                // 臨時顯示個小提示
+                const toast = document.createElement('div');
+                toast.className = "fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm";
+                toast.innerHTML = '<i class="fas fa-check-circle text-green-400"></i> 行程代碼已複製！趕快貼上傳給朋友吧！';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            } catch (err) {
+                // 如果瀏覽器阻擋剪貼簿，提供手動複製的輸入框
+                const input = document.createElement('input');
+                input.value = dataStr;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+            }
+        }
+
+        function importData() {
+            // 建立一個臨時的輸入視窗
+            const importModal = document.createElement('div');
+            importModal.className = "fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center px-4 backdrop-blur-sm";
+            importModal.innerHTML = `
+                <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-2xl">
+                    <h3 class="font-bold text-lg mb-2 text-gray-800">匯入行程代碼</h3>
+                    <p class="text-xs text-gray-500 mb-4">貼上朋友分享給您的代碼。注意：這將會覆蓋您目前的行程。</p>
+                    <textarea id="import-text" rows="4" class="w-full border rounded-lg p-2 text-xs mb-4 outline-none focus:border-blue-500" placeholder="貼上代碼..."></textarea>
+                    <div class="flex justify-end gap-2">
+                        <button id="cancel-import" class="px-4 py-2 text-sm text-gray-500 font-bold hover:bg-gray-100 rounded-lg transition">取消</button>
+                        <button id="confirm-import" class="px-4 py-2 text-sm bg-emerald-600 text-white font-bold rounded-lg shadow hover:bg-emerald-700 transition">確定匯入</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(importModal);
+
+            document.getElementById('cancel-import').onclick = () => importModal.remove();
+            
+            document.getElementById('confirm-import').onclick = () => {
+                const code = document.getElementById('import-text').value.trim();
+                if(code) {
+                    try {
+                        const parsedData = JSON.parse(decodeURIComponent(atob(code)));
+                        if(parsedData && parsedData.day1 && parsedData.day2) {
+                            itineraryData = parsedData;
+                            saveData();
+                            renderDay('day1');
+                            renderDay('day2');
+                            importModal.remove();
+                        } else {
+                            throw new Error("Invalid format");
+                        }
+                    } catch(e) {
+                        // 替換 alert
+                        const errorMsg = document.createElement('div');
+                        errorMsg.className = "text-red-500 text-xs mt-2 font-bold";
+                        errorMsg.innerText = "代碼格式錯誤，請確認是否有複製完整。";
+                        document.getElementById('import-text').after(errorMsg);
+                    }
+                }
+            };
+        }
+
+        // 處理封面圖片上傳與壓縮
+        function handleBannerUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // 使用 Canvas 壓縮圖片，避免 localStorage 爆量 (限制最大寬度 1200px)
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const MAX_WIDTH = 1200;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // 轉存為 70% 品質的 JPEG 以節省空間
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7); 
+                    
+                    // 替換背景圖
+                    document.getElementById('banner-bg').style.backgroundImage = `url('${dataUrl}')`;
+                    
+                    try {
+                        localStorage.setItem('tainanTripBanner', dataUrl);
+                    } catch (err) {
+                        console.error('儲存圖片失敗:', err);
+                        const toast = document.createElement('div');
+                        toast.className = "fixed top-20 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm";
+                        toast.innerHTML = '<i class="fas fa-exclamation-triangle"></i> 圖片檔案太大，您的瀏覽器無法快取儲存。';
+                        document.body.appendChild(toast);
+                        setTimeout(() => toast.remove(), 3000);
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 啟動應用
+        window.onload = init;
+    </script>
 </body>
 </html>
